@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { insignias, leccionesPlanas, niveles, totalLecciones } from "./curso";
+import api from '../api';
 
 export type Progreso = {
   nombre: string;
@@ -66,19 +67,30 @@ export function ProgresoProvider({ children }: { children: ReactNode }) {
     }
   }, [progreso, hidratado]);
 
-  const completarLeccion = useCallback((id: string, xp: number) => {
+const completarLeccion = useCallback((id: string, xp: number) => {
     setProgreso((p) => {
       const yaHecha = p.completadas.includes(id);
       const dia = hoy();
       let racha = p.racha;
       if (p.ultimoDia !== dia) racha = p.ultimoDia === ayer() ? p.racha + 1 : 1;
-      return {
+      
+      const nuevoProgreso = {
         ...p,
         completadas: yaHecha ? p.completadas : [...p.completadas, id],
         xp: p.xp + (yaHecha ? Math.round(xp / 4) : xp),
         racha,
         ultimoDia: dia,
       };
+
+      // Le avisamos a Django que el usuario avanzó
+      api.post('progresos/', {
+        // Ajusta estos campos según lo que pida tu modelo ProgresoUsuario en Django
+        leccion_id: id,
+        xp_actual: nuevoProgreso.xp,
+        racha_actual: nuevoProgreso.racha
+      }).catch(err => console.error("Fallo al guardar progreso en Django:", err));
+
+      return nuevoProgreso;
     });
   }, []);
 
@@ -115,6 +127,10 @@ export function useProgreso() {
 }
 
 export function nivelActual(completadas: string[]) {
+  // Si los niveles aún no han cargado o están vacíos, retornamos un nivel por defecto para que no colapse la app
+  if (!niveles || niveles.length === 0) {
+    return { numero: 1, etiqueta: "Principiante", titulo: "Fundamentos", lecciones: [] };
+  }
   for (const nivel of niveles) {
     if (nivel.lecciones.some((l) => !completadas.includes(l.id))) return nivel;
   }

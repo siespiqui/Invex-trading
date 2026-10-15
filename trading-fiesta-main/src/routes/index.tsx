@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
-import { niveles } from "@/lib/curso";
 import { nivelActual, porcentajeCurso, siguienteLeccion, useProgreso } from "@/lib/progreso";
+import { useEffect, useState } from "react";
+import { getCursos } from "@/api";
+import { Nivel } from "@/lib/curso";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,10 +26,44 @@ export const Route = createFileRoute("/")({
 
 function Inicio() {
   const { progreso, estaDesbloqueada } = useProgreso();
-  const nivel = nivelActual(progreso.completadas);
-  const siguiente = siguienteLeccion(progreso.completadas);
-  const hechasNivel = nivel.lecciones.filter((l) => progreso.completadas.includes(l.id)).length;
-  const pct = Math.round((hechasNivel / nivel.lecciones.length) * 100);
+  const [niveles, setNiveles] = useState<Nivel[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    getCursos()
+      .then((respuesta) => {
+        setNiveles(respuesta.data);
+        setCargando(false);
+      })
+      .catch((error) => {
+        console.error("Error al obtener niveles de Django:", error);
+        setCargando(false);
+      });
+  }, []);
+
+  if (cargando) {
+    return (
+      <Shell>
+        <div className="p-8 text-center text-aurora font-medium">
+          Cargando cursos desde el servidor...
+        </div>
+      </Shell>
+    );
+  }
+
+// Le decimos de frente que "nivel" siempre será de tipo Nivel
+const nivel = (niveles.length > 0 ? niveles[0] : {
+  id: "cargando",
+  numero: 1,
+  titulo: "Cargando...",
+  etiqueta: "Cargando",
+  descripcion: "Cargando datos...",
+  lecciones: []
+}) as Nivel;
+
+const siguiente = siguienteLeccion(progreso.completadas);
+const hechasNivel = nivel.lecciones.filter((l) => progreso.completadas.includes(l.id)).length;
+const pct = nivel.lecciones.length > 0 ? Math.round((hechasNivel / nivel.lecciones.length) * 100) : 0;
 
   return (
     <Shell>
@@ -71,31 +107,38 @@ function Inicio() {
                 />
               </div>
             </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {siguiente ? (
-                <Link
-                  to="/leccion/$leccionId"
-                  params={{ leccionId: siguiente.id }}
-                  className="rounded-xl bg-gradient-to-r from-aurora to-mint px-6 py-3 font-display text-sm font-semibold text-ink shadow-[var(--shadow-aurora)] transition hover:brightness-110"
-                >
-                  Comenzar lección
-                </Link>
-              ) : (
-                <Link
-                  to="/certificado"
-                  className="rounded-xl bg-gradient-to-r from-aurora to-mint px-6 py-3 font-display text-sm font-semibold text-ink shadow-[var(--shadow-aurora)] transition hover:brightness-110"
-                >
-                  Ver certificado
-                </Link>
-              )}
+          <div className="mt-6 flex flex-wrap gap-3">
+            {siguiente ? (
               <Link
-                to="/ranking"
-                className="glass rounded-xl px-6 py-3 font-display text-sm font-semibold transition hover:bg-white/10"
+                to="/leccion/$leccionId"
+                params={{ leccionId: siguiente.id }}
+                className="rounded-xl bg-gradient-to-r from-aurora to-mint px-6 py-3 font-display text-sm font-semibold text-ink shadow-[var(--shadow-aurora)] transition hover:brightness-110"
               >
-                Ver ranking
+                Comenzar lección
               </Link>
-            </div>
+            ) : (
+              <Link
+                to="/certificado"
+                className="rounded-xl bg-gradient-to-r from-aurora to-mint px-6 py-3 font-display text-sm font-semibold text-ink shadow-[var(--shadow-aurora)] transition hover:brightness-110"
+              >
+                Ver certificado
+              </Link>
+            )}
+            <Link
+              to="/ranking"
+              className="glass rounded-xl px-6 py-3 font-display text-sm font-semibold transition hover:bg-white/10"
+            >
+              Ver ranking
+            </Link>
+            
+            {/* Agrega este botón aquí */}
+            <Link
+              to="/insignias"
+              className="glass rounded-xl px-6 py-3 font-display text-sm font-semibold transition hover:bg-white/10"
+            >
+              Ver insignias
+            </Link>
+          </div>
 
             <div className="mt-7">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">Hoja de ruta</p>
