@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CertificadoRouteImport } from './routes/certificado'
 import { Route as InsigniasRouteImport } from './routes/insignias'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as LeccionLeccionIdRouteImport } from './routes/leccion.$leccionId'
@@ -29,6 +30,11 @@ const CertificadoRoute = CertificadoRouteImport.update({
 const InsigniasRoute = InsigniasRouteImport.update({
   id: '/insignias',
   path: '/insignias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PremiumRoute = PremiumRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/certificado': typeof CertificadoRoute
   '/insignias': typeof InsigniasRoute
+  '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/ranking': typeof RankingRoute
   '/leccion/$leccionId': typeof LeccionLeccionIdRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/certificado': typeof CertificadoRoute
   '/insignias': typeof InsigniasRoute
+  '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/ranking': typeof RankingRoute
   '/leccion/$leccionId': typeof LeccionLeccionIdRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/certificado': typeof CertificadoRoute
   '/insignias': typeof InsigniasRoute
+  '/login': typeof LoginRoute
   '/premium': typeof PremiumRoute
   '/ranking': typeof RankingRoute
   '/leccion/$leccionId': typeof LeccionLeccionIdRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/certificado'
     | '/insignias'
+    | '/login'
     | '/premium'
     | '/ranking'
     | '/leccion/$leccionId'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/certificado'
     | '/insignias'
+    | '/login'
     | '/premium'
     | '/ranking'
     | '/leccion/$leccionId'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/certificado'
     | '/insignias'
+    | '/login'
     | '/premium'
     | '/ranking'
     | '/leccion/$leccionId'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CertificadoRoute: typeof CertificadoRoute
   InsigniasRoute: typeof InsigniasRoute
+  LoginRoute: typeof LoginRoute
   PremiumRoute: typeof PremiumRoute
   RankingRoute: typeof RankingRoute
   LeccionLeccionIdRoute: typeof LeccionLeccionIdRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/insignias'
       fullPath: '/insignias'
       preLoaderRoute: typeof InsigniasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/premium': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CertificadoRoute: CertificadoRoute,
   InsigniasRoute: InsigniasRoute,
+  LoginRoute: LoginRoute,
   PremiumRoute: PremiumRoute,
   RankingRoute: RankingRoute,
   LeccionLeccionIdRoute: LeccionLeccionIdRoute,

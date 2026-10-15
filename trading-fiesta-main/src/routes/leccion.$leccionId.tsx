@@ -1,14 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { Shell } from "@/components/Shell";
 import { buscarLeccion, leccionesPlanas } from "@/lib/curso";
 import { useProgreso } from "@/lib/progreso";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/leccion/$leccionId")({
-  head: ({ params }) => {
-    const l = buscarLeccion(params.leccionId);
-    const titulo = l ? `${l.titulo} · INVEX Trading` : "Lección · INVEX Trading";
-    const desc = l ? `${l.resumen}. Teoría breve y quiz interactivo.` : "Lección de trading con quiz interactivo.";
+  head: () => {
+    const titulo = "Lección · INVEX Trading";
+    const desc = "Lección de trading con quiz interactivo.";
     return {
       meta: [
         { title: titulo },
@@ -23,16 +22,43 @@ export const Route = createFileRoute("/leccion/$leccionId")({
 
 function LeccionPagina() {
   const { leccionId } = Route.useParams();
-  const leccion = buscarLeccion(leccionId);
   const navigate = useNavigate();
   const { progreso, completarLeccion, estaDesbloqueada } = useProgreso();
 
+  // 1. Nuevos estados para manejar los datos que vienen de Django
+  const [leccion, setLeccion] = useState<any>(null);
+  const [cargando, setCargando] = useState(true);
+
+  // 2. Estados que ya tenías para el quiz
   const [indice, setIndice] = useState(0);
   const [elegida, setElegida] = useState<number | null>(null);
   const [aciertos, setAciertos] = useState(0);
-    const [terminada, setTerminada] = useState(false);
+  const [terminada, setTerminada] = useState(false);
   const [parteSeleccionada, setParteSeleccionada] = useState("cuerpo");
 
+  // 3. Efecto para buscar la lección en Django al entrar a la pantalla
+  useEffect(() => {
+    buscarLeccion(leccionId)
+      .then((data) => {
+        setLeccion(data);
+        setCargando(false);
+      })
+      .catch((err) => {
+        console.error("Error al cargar lección", err);
+        setCargando(false);
+      });
+  }, [leccionId]);
+
+  // 4. Pantalla de carga temporal
+  if (cargando) {
+    return (
+      <Shell>
+        <div className="glass rounded-3xl p-8 text-center text-aurora">
+          Cargando lección desde el servidor...
+        </div>
+      </Shell>
+    );
+  }
 
   if (!leccion) {
     return (
@@ -46,7 +72,6 @@ function LeccionPagina() {
       </Shell>
     );
   }
-
   if (!estaDesbloqueada(leccion.id)) {
     return (
       <Shell>
